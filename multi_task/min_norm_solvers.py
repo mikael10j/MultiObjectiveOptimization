@@ -6,7 +6,8 @@ class MinNormSolver:
     MAX_ITER = 250
     STOP_CRIT = 1e-5
 
-    def _min_norm_element_from2(v1v1, v1v2, v2v2):
+    @classmethod
+    def _min_norm_element_from2(cls, v1v1, v1v2, v2v2):
         """
         Analytical solution for min_{c} |cx_1 + (1-c)x_2|_2^2
         d is the distance (objective) optimzed
@@ -29,7 +30,8 @@ class MinNormSolver:
         cost = v2v2 + gamma*(v1v2 - v2v2)
         return gamma, cost
 
-    def _min_norm_2d(vecs, dps):
+    @classmethod
+    def _min_norm_2d(cls, vecs, dps):
         """
         Find the minimum norm solution as combination of two points
         This is correct only in 2D
@@ -41,23 +43,24 @@ class MinNormSolver:
                 if (i,j) not in dps:
                     dps[(i, j)] = 0.0
                     for k in range(len(vecs[i])):
-                        dps[(i,j)] += torch.dot(vecs[i][k], vecs[j][k]).data[0]
+                        dps[(i,j)] += torch.dot(vecs[i][k], vecs[j][k]).item()
                     dps[(j, i)] = dps[(i, j)]
                 if (i,i) not in dps:
                     dps[(i, i)] = 0.0
                     for k in range(len(vecs[i])):
-                        dps[(i,i)] += torch.dot(vecs[i][k], vecs[i][k]).data[0]
+                        dps[(i,i)] += torch.dot(vecs[i][k], vecs[i][k]).item()
                 if (j,j) not in dps:
                     dps[(j, j)] = 0.0   
                     for k in range(len(vecs[i])):
-                        dps[(j, j)] += torch.dot(vecs[j][k], vecs[j][k]).data[0]
+                        dps[(j, j)] += torch.dot(vecs[j][k], vecs[j][k]).item()
                 c,d = MinNormSolver._min_norm_element_from2(dps[(i,i)], dps[(i,j)], dps[(j,j)])
                 if d < dmin:
                     dmin = d
                     sol = [(i,j),c,d]
         return sol, dps
 
-    def _projection2simplex(y):
+    @classmethod
+    def _projection2simplex(cls, y):
         """
         Given y, it solves argmin_z |y-z|_2 st \sum z = 1 , 1 >= z_i >= 0 for all i
         """
@@ -72,8 +75,9 @@ class MinNormSolver:
                 tmax_f = tmax
                 break
         return np.maximum(y - tmax_f, np.zeros(y.shape))
-    
-    def _next_point(cur_val, grad, n):
+
+    @classmethod
+    def _next_point(cls, cur_val, grad, n):
         proj_grad = grad - ( np.sum(grad) / n )
         tm1 = -1.0*cur_val[proj_grad<0]/proj_grad[proj_grad<0]
         tm2 = (1.0 - cur_val[proj_grad>0])/(proj_grad[proj_grad>0])
@@ -89,7 +93,8 @@ class MinNormSolver:
         next_point = MinNormSolver._projection2simplex(next_point)
         return next_point
 
-    def find_min_norm_element(vecs):
+    @classmethod
+    def find_min_norm_element(cls, vecs):
         """
         Given a list of vectors (vecs), this method finds the minimum norm element in the convex hull
         as min |u|_2 st. u = \sum c_i vecs[i] and \sum c_i = 1.
@@ -136,7 +141,8 @@ class MinNormSolver:
                 return sol_vec, nd
             sol_vec = new_sol_vec
 
-    def find_min_norm_element_FW(vecs):
+    @classmethod
+    def find_min_norm_element_FW(cls, vecs):
         """
         Given a list of vectors (vecs), this method finds the minimum norm element in the convex hull
         as min |u|_2 st. u = \sum c_i vecs[i] and \sum c_i = 1.
